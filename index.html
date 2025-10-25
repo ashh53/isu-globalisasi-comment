@@ -350,16 +350,13 @@ function toggleReplyBox(commentId, forceShow = null) {
   }
 }
 
-/**
- * /**
- * Fungsi 'delete' baru. Ia akan PADAM komen (dan semua balasannya)
- */
+// ===== FIX 1: FUNGSI DELETE BARU (HARD DELETE / PADAM TERUS) =====
 function deleteComment(topicId, commentId) {
   if (!confirm('Anda pasti nak padam komen ini? SEMUA balasan di bawahnya akan turut dipadam.')) return;
   if (!currentUser) { alert('Sila login.'); return; }
 
   const commentRef = db.ref(`comments/${topicId}/${commentId}`);
-
+  
   // Semak kebenaran (permission) dulu
   commentRef.once('value', snapshot => {
     const data = snapshot.val();
@@ -367,7 +364,60 @@ function deleteComment(topicId, commentId) {
         console.log("Komen dah tak wujud.");
         return;
     }
+    
+    if (data.uid === currentUser.uid) {
+        // Pengguna sah.
+        // Pertama, cari semua 'anak' (balasan) dan padamkannya.
+        deleteAllReplies(topicId, commentId, () => {
+            // Selepas semua 'anak' dipadam, baru padam 'ibu'
+            commentRef.remove()
+                .catch(err => alert('Gagal padam komen utama: ' + err.message));
+        });
+        
+    } else {
+      alert('Anda hanya boleh padam komen anda sendiri.');
+    }
+  });
+}
 
+/**
+ * Fungsi bantuan (helper) untuk padam semua balasan (rekursif)
+ */
+function deleteAllReplies(topicId, parentId, onComplete) {
+    const repliesRef = db.ref('comments/' + topicId).orderByChild('parentId').equalTo(parentId);
+    
+    repliesRef.once('value', snapshot => {
+        const replies = snapshot.val();
+        if (!replies) {
+            // Tiada balasan, 'callback' tamat
+            onComplete();
+            return;
+        }
+
+        const replyIds = Object.keys(replies);
+        let processedCount = 0;
+
+        if (replyIds.length === 0) {
+            onComplete();
+            return;
+        }
+
+        // Padam setiap balasan, dan balasan kepada balasan itu
+        replyIds.forEach(replyId => {
+            deleteAllReplies(topicId, replyId, () => {
+                // Selepas 'cucu' dipadam, padam 'anak'
+                db.ref(`comments/${topicId}/${replyId}`).remove(() => {
+                    processedCount++;
+                    if (processedCount === replyIds.length) {
+                        // Semua balasan di level ini dah padam
+                        onComplete();
+                    }
+                });
+            });
+        });
+    });
+}
+// ===== TAMAT FIX 1 =====
     if (data.uid === currentUser.uid) {
         // Pengguna sah.
         // Pertama, cari semua 'anak' (balasan) dan padamkannya.
@@ -443,25 +493,25 @@ function addReaction(topicId, commentId, emoji) {
 /**
  * Pintu masuk utama. Muat SEMUA komen untuk topik ini.
  */
+// ===== FIX 2: FUNGSI 'LOAD' BARU (SEMBUNYI KOMEN LAMA) =====
 function loadComments(topicId){
   const container = document.getElementById('comments-'+topicId);
-
-  // Kita 'order by' time. 'parentId' akan diurus oleh logik
+  
   db.ref('comments/'+topicId).orderByChild('time').on('value', snapshot => {
     container.innerHTML = ''; // Kosongkan
     const allComments = snapshot.val() || {};
-
+    
     // 1. Bina 'map' untuk susun komen
     const commentsById = new Map();
     const repliesMap = new Map();
-
+    
     for (const [id, comment] of Object.entries(allComments)) {
       comment.id = id; // Simpan ID unik
       commentsById.set(id, comment);
-
+      
       // === INI ADALAH PEMBETULAN (FIX) ===
       const parentId = comment.parentId; // Dapatkan parentId
-
+      
       if (parentId) { // HANYA proses komen jika ia ADA 'parentId'
         if (!repliesMap.has(parentId)) {
           repliesMap.set(parentId, []);
@@ -473,15 +523,14 @@ function loadComments(topicId){
     }
 
     // 2. 'Render' hanya komen 'root' (level 0)
-    // Kita susun 'root' secara menurun (terbaru di atas)
     const rootComments = (repliesMap.get('root') || []).reverse();
-
+    
     if (rootComments.length === 0) {
         container.innerHTML = '<p style="text-align:center; color:#777; font-size:14px;">Tiada komen lagi. Jadilah yang pertama!</p>';
     } else {
         const threadContainer = document.createElement('div');
         threadContainer.className = 'comment-thread';
-
+        
         for (const comment of rootComments) {
           threadContainer.appendChild(
             renderCommentRecursive(topicId, comment, repliesMap, commentsById)
@@ -491,6 +540,7 @@ function loadComments(topicId){
     }
   });
 }
+// ===== TAMAT FIX 2 =====
 
 /**
  * Fungsi ajaib (rekursif) yang bina HTML
@@ -584,5 +634,6 @@ function renderCommentRecursive(topicId, comment, repliesMap, commentsById) {
 </script>
 </body>
 </html>
+
 
 
