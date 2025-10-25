@@ -24,7 +24,6 @@
   <h1 style="text-align:center;">💬 Isu Globalisasi Dalam Budaya</h1>
   <p style="text-align:center;">Baca perbincangan di bawah mengikut topik, kemudian tambah pendapat anda.</p>
 
-  <!-- Topic 1 -->
   <div class="topic" id="topic1">
     <h2>👗 Pakaian Moden: Fesyen Ke atau Dah Lupa Aurat?</h2>
     <p>Sekarang semua nak nampak bergaya — ikut tren, artis, dan influencer. Tapi dalam kejar fesyen moden, ramai dah lupa batas aurat dan kesopanan yang Islam ajar. Kita bangga ikut gaya Barat sebab nampak <i>“trendy”</i> dan <i>“up to date”</i>, tapi dalam masa sama maruah dan identiti Islam makin hilang.</p>
@@ -36,7 +35,6 @@
     </div>
   </div>
 
-  <!-- Topic 2 -->
   <div class="topic" id="topic2">
     <h2>💍 Perkahwinan Bebas Anak: Kebebasan Atau Hilang Arah?</h2>
     <p>Semakin ramai pasangan pilih kahwin tanpa anak. Katanya nak fokus kerjaya, nak <i>“enjoy hidup”</i>, atau takut anak jadi beban. Pemikiran ni datang dari budaya Barat yang utamakan kebebasan diri. Tapi dalam Islam, anak itu rezeki dan amanah. Bila kita tolak zuriat, kita tolak tanggungjawab yang Allah beri.</p>
@@ -48,7 +46,6 @@
     </div>
   </div>
 
-  <!-- Topic 3 -->
   <div class="topic" id="topic3">
     <h2>👫 Pergaulan Bebas: Dah Biasa Sebab Dunia Dah Terbuka?</h2>
     <p><i>“Kawan je pun.”</i> — ayat paling biasa bila sebut pergaulan bebas. Tapi bila batas makin kabur, dosa jadi hal kecil. Budaya Barat buat semua tu nampak normal, padahal Islam dah tetapkan batas untuk jaga maruah. Dunia boleh terbuka, tapi jangan sampai prinsip Islam kita terbuka sama.</p>
@@ -61,10 +58,10 @@
   </div>
 </div>
 
-<!-- Firebase Compat -->
 <script src="https://www.gstatic.com/firebasejs/12.4.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.4.0/firebase-database-compat.js"></script>
 <script>
+// ***** GANTIKAN DENGAN FIREBASE CONFIG AWAK YANG SEBENAR *****
 const firebaseConfig = {
   apiKey: "AIzaSyBqlGP3LrsHeS0MIJsw1b8zgYGV4KtS4R8",
   authDomain: "isu-globalisasi-budaya-comment.firebaseapp.com",
@@ -79,8 +76,7 @@ const db = firebase.database();
 
 function escapeHtml(unsafe){
   return unsafe.replace(/&/g,"&amp;").replace(/</g,"&lt;")
-               .replace(/>/g,"&gt;")
-               .replace(/"/g,"&quot;")
+               .replace(/>/g,"&gt;").replace(/"/g,"&quot;")
                .replace(/'/g,"&#039;");
 }
 
@@ -96,8 +92,12 @@ function makeCommentElement(data){
 }
 
 function postComment(topicId){
-  const nameInput = document.getElementById(name-${topicId});
-  const input = document.getElementById(input-${topicId});
+  // ===== INI BAHAGIAN YANG DIBETULKAN =====
+  // Kita guna ` (backtick) untuk gabungkan string dan variable
+  const nameInput = document.getElementById(`name-${topicId}`);
+  const input = document.getElementById(`input-${topicId}`);
+  // ==========================================
+
   const name = nameInput.value.trim() || 'Anonymous';
   const text = input.value.trim();
   if(!text){ alert('Sila tulis komen dahulu.'); return; }
@@ -122,3 +122,4 @@ function loadComments(topicId){
 </script>
 </body>
 </html>
+ 
