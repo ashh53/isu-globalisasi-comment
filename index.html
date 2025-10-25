@@ -50,7 +50,6 @@
     color: #333;
   }
 
-  /* === INI STYLE BARU UNTUK EMOJI === */
   .emoji-bar {
     margin-top: 10px;
     padding-top: 8px;
@@ -58,6 +57,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+    align-items: center; /* Tambah ini */
   }
   .emoji-btn {
     background: #f7f3ee;
@@ -80,8 +80,23 @@
     margin-left: 4px;
     min-width: 10px;
   }
-  /* === TAMAT STYLE BARU UNTUK EMOJI === */
-
+  
+  /* === INI STYLE BARU UNTUK BUTANG "BALAS" === */
+  .reply-btn {
+    background: none;
+    border: none;
+    color: #7a6f63;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 13px;
+    padding: 4px 8px;
+    margin-left: auto; /* Letak di hujung kanan */
+  }
+  .reply-btn:hover {
+    text-decoration: underline;
+  }
+  /* === TAMAT STYLE BARU === */
+  
 </style>
 </head>
 <body>
@@ -94,7 +109,7 @@
     <p>Sekarang semua nak nampak bergaya — ikut tren, artis, dan influencer. Tapi dalam kejar fesyen moden, ramai dah lupa batas aurat dan kesopanan yang Islam ajar. Kita bangga ikut gaya Barat sebab nampak <i>“trendy”</i> dan <i>“up to date”</i>, tapi dalam masa sama maruah dan identiti Islam makin hilang.</p>
     <div id="comments-topic1" class="comments"></div>
     <div class="comment-box">
-      <input id="name-topic1" placeholder="Nama (optional)">
+      <input id="name-topic1" placeholder="Nama (Wajib diisi)">
       <textarea id="input-topic1" rows="3" placeholder="Tulis pendapat anda..."></textarea>
       <button onclick="postComment('topic1')">Hantar</button>
     </div>
@@ -105,7 +120,7 @@
     <p>Semakin ramai pasangan pilih kahwin tanpa anak. Katanya nak fokus kerjaya, nak <i>“enjoy hidup”</i>, atau takut anak jadi beban. Pemikiran ni datang dari budaya Barat yang utamakan kebebasan diri. Tapi dalam Islam, anak itu rezeki dan amanah. Bila kita tolak zuriat, kita tolak tanggungjawab yang Allah beri.</p>
     <div id="comments-topic2" class="comments"></div>
     <div class="comment-box">
-      <input id="name-topic2" placeholder="Nama (optional)">
+      <input id="name-topic2" placeholder="Nama (Wajib diisi)">
       <textarea id="input-topic2" rows="3" placeholder="Tulis pendapat anda..."></textarea>
       <button onclick="postComment('topic2')">Hantar</button>
     </div>
@@ -116,7 +131,7 @@
     <p><i>“Kawan je pun.”</i> — ayat paling biasa bila sebut pergaulan bebas. Tapi bila batas makin kabur, dosa jadi hal kecil. Budaya Barat buat semua tu nampak normal, padahal Islam dah tetapkan batas untuk jaga maruah. Dunia boleh terbuka, tapi jangan sampai prinsip Islam kita terbuka sama.</p>
     <div id="comments-topic3" class="comments"></div>
     <div class="comment-box">
-      <input id="name-topic3" placeholder="Nama (optional)">
+      <input id="name-topic3" placeholder="Nama (Wajib diisi)">
       <textarea id="input-topic3" rows="3" placeholder="Tulis pendapat anda..."></textarea>
       <button onclick="postComment('topic3')">Hantar</button>
     </div>
@@ -142,7 +157,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// === SENARAI EMOJI YANG DIBENARKAN ===
 const ALLOWED_EMOJIS = ['👍', '❤️', '😂', '😮'];
 
 function escapeHtml(unsafe){
@@ -151,48 +165,67 @@ function escapeHtml(unsafe){
                .replace(/'/g,"&#039;");
 }
 
-// ===== FUNGSI DIKEMAS KINI (tambah butang X dan Bar Emoji) =====
+// ===== FUNGSI DIKEMAS KINI (tambah butang Balas) =====
 function makeCommentElement(topicId, commentId, data){
   const div = document.createElement('div');
   div.className = 'single-comment';
   const date = new Date(data.time);
   const timeStr = date.toLocaleString('ms-MY',{year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
   
-  // --- Mula Binaan Bar Emoji ---
   let emojiBarHtml = '<div class="emoji-bar">';
-  const reactions = data.reactions || {}; // Dapatkan data 'reactions', atau objek kosong
+  const reactions = data.reactions || {}; 
   
   for (const emoji of ALLOWED_EMOJIS) {
-    const count = reactions[emoji] || 0; // Dapatkan kiraan, atau 0
+    const count = reactions[emoji] || 0; 
     emojiBarHtml += `
       <button class="emoji-btn" onclick="addReaction('${topicId}', '${commentId}', '${emoji}')">
         ${emoji} <span class="emoji-count">${count}</span>
       </button>
     `;
   }
+  
+  // === INI KOD BARU UNTUK "BALAS" ===
+  // Sediakan nama yang 'safe' untuk diletak dalam onclick
+  const safeName = data.name.replace(/'/g, "\\'"); // Escape single quotes
+  emojiBarHtml += `
+    <button class="reply-btn" onclick="replyTo('${topicId}', '${safeName}')">
+      Balas
+    </button>
+  `;
+  // === TAMAT KOD BARU ===
+  
   emojiBarHtml += '</div>';
-  // --- Tamat Binaan Bar Emoji ---
 
-  // Masukkan semua HTML ke dalam komen
   div.innerHTML = `
     <button class="delete-btn" onclick="deleteComment('${topicId}', '${commentId}')">X</button>
     <div class="comment-name">${escapeHtml(data.name)}</div>
     <div>${escapeHtml(data.text)}</div>
     <div class="comment-time">${timeStr}</div>
     ${emojiBarHtml} 
-  `; // <-- Bar Emoji ditambah di sini
+  `; 
   return div;
 }
 
+// ===== FUNGSI DIKEMAS KINI (NAMA WAJIB DIISI) =====
 function postComment(topicId){
   const nameInput = document.getElementById(`name-${topicId}`);
   const input = document.getElementById(`input-${topicId}`);
-  const name = nameInput.value.trim() || 'Anonymous';
-  const text = input.value.trim();
-  if(!text){ alert('Sila tulis komen dahulu.'); return; }
   
-  // Apabila hantar komen baru, kita hantar data komen sahaja
-  // 'reactions' akan diwujudkan secara automatik bila ada orang react
+  const name = nameInput.value.trim(); // Dapatkan nama
+  const text = input.value.trim();
+  
+  // --- KEMAS KINI DI SINI ---
+  // Periksa jika teks atau nama kosong
+  if(!text){ 
+    alert('Sila tulis komen dahulu.'); 
+    return; 
+  }
+  if(!name){ 
+    alert('Sila masukkan nama anda untuk hantar komen.'); 
+    return; 
+  }
+  // --- TAMAT KEMAS KINI ---
+  
   db.ref('comments/'+topicId).push({name,text,time:Date.now()});
   
   input.value=''; nameInput.value='';
@@ -218,26 +251,35 @@ function deleteComment(topicId, commentId) {
     db.ref(`comments/${topicId}/${commentId}`)
       .remove()
       .catch(err => {
-        alert('Gagal padam komen: ' + err.message);
+        alert('Gagal padam komen: '.concat(err.message));
       });
   }
 }
 
-// ===== FUNGSI BARU (untuk tambah reaksi) =====
 function addReaction(topicId, commentId, emoji) {
-  // Rujukan terus ke kiraan emoji
   const reactionRef = db.ref(`comments/${topicId}/${commentId}/reactions/${emoji}`);
   
-  // Guna transaction untuk 'increment' (tambah 1) dengan selamat
-  // Ini untuk elak masalah kalau 2 orang klik serentak
   reactionRef.transaction(currentValue => {
     return (currentValue || 0) + 1;
   });
 }
-// ==========================================
+
+// ===== FUNGSI BARU (UNTUK SIMULASI REPLY) =====
+function replyTo(topicId, name) {
+  const input = document.getElementById(`input-${topicId}`);
+  
+  // Letak @Nama di kotak komen
+  input.value = `@${name} `;
+  
+  // Terus fokus ke kotak komen
+  input.focus();
+}
+// ===========================================
 
 ['topic1','topic2','topic3'].forEach(loadComments);
 </script>
 </body>
 </html>
-  
+ 
+
+
