@@ -10,23 +10,34 @@
   .topic { background:#fffdf9; border-radius:10px; padding:18px; margin-bottom:20px; border:1px solid #dfd2bf; }
   h2 { color:#3f352d; margin-bottom:8px; }
   p { line-height:1.6; margin-bottom:12px; }
-  .comments { background:#f7f3ee; border-radius:8px; padding:12px; min-height:60px; max-height:300px; overflow-y:auto; margin-bottom:12px;}
+  .comments { background:#f7f3ee; border-radius:8px; padding:12px; min-height:60px; max-height:400px; overflow-y:auto; margin-bottom:12px;}
   .comment-box { background:#fdf8f2; border-radius:8px; padding:12px; display:flex; flex-direction:column; gap:8px; }
   input, textarea { padding:10px; border-radius:6px; border:1px solid #c8bdb1; background:#fffdfb; width:100%; }
   button { align-self:flex-end; background:linear-gradient(90deg,#FFD54F,#FFC107); border:none; color:#2f2f2f; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:600; box-shadow:0 4px 12px rgba(255,197,60,0.18);}
   
+  /* === KEMAS KINI STYLE === */
   .single-comment { 
     background:#ffffff; 
-    border-left:4px solid #d6b984; 
     border-radius:8px; 
     padding:10px 12px; 
     margin-bottom:10px; 
     box-shadow:0 1px 3px rgba(0,0,0,0.04);
     position: relative;
-    padding-right: 35px;
+    padding-left: 60px; /* Ruang untuk avatar */
+    min-height: 40px;
   }
-  .comment-name { color:#3b3028; font-weight:600; margin-bottom:4px;}
+  .comment-avatar {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #eee;
+  }
+  .comment-name { color:#3b3028; font-weight:600; margin-bottom:2px;}
   .comment-time { color:#7a6f63; font-size:12px;}
+  .comment-text { margin-top: 4px; }
 
   .delete-btn {
     position: absolute;
@@ -45,10 +56,7 @@
     font-size: 14px;
     text-align: center;
   }
-  .delete-btn:hover {
-    background: #e6dbcc;
-    color: #333;
-  }
+  .delete-btn:hover { background: #e6dbcc; color: #333; }
 
   .emoji-bar {
     margin-top: 10px;
@@ -57,7 +65,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    align-items: center; /* Tambah ini */
+    align-items: center;
   }
   .emoji-btn {
     background: #f7f3ee;
@@ -69,19 +77,9 @@
     display: flex;
     align-items: center;
   }
-  .emoji-btn:hover {
-    background: #e6dbcc;
-    border-color: #d6b984;
-  }
-  .emoji-count {
-    font-size: 12px;
-    color: #3b3028;
-    font-weight: 600;
-    margin-left: 4px;
-    min-width: 10px;
-  }
+  .emoji-btn:hover { background: #e6dbcc; border-color: #d6b984; }
+  .emoji-count { font-size: 12px; color: #3b3028; font-weight: 600; margin-left: 4px; min-width: 10px; }
   
-  /* === INI STYLE BARU UNTUK BUTANG "BALAS" === */
   .reply-btn {
     background: none;
     border: none;
@@ -92,61 +90,108 @@
     padding: 4px 8px;
     margin-left: auto; /* Letak di hujung kanan */
   }
-  .reply-btn:hover {
-    text-decoration: underline;
-  }
-  /* === TAMAT STYLE BARU === */
+  .reply-btn:hover { text-decoration: underline; }
   
+  /* === STYLE BARU UNTUK LOGIN === */
+  #auth-container {
+    background: #fffdf9;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    text-align: center;
+    border: 1px solid #dfd2bf;
+  }
+  #user-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+  }
+  #user-info img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+  }
+  #user-info span {
+    font-weight: 600;
+    font-size: 16px;
+  }
+  #btn-logout {
+    background: #d3c4b1;
+    color: #333;
+    margin-left: auto;
+  }
+  #btn-google-login {
+    background: #4285F4;
+    color: white;
+    font-weight: 600;
+    padding: 10px 16px;
+  }
+  /* Semasa 'disabled', butang hantar & textarea nampak pudar */
+  textarea:disabled, button:disabled {
+    background-color: #f7f3ee !important;
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
 </style>
 </head>
 <body>
 <div class="container">
+  
+  <div id="auth-container">
+    <button id="btn-google-login" onclick="signInWithGoogle()">Login dengan Google</button>
+    
+    <div id="user-info" style="display:none;">
+      <img id="user-avatar" src="" alt="Avatar">
+      <span id="user-name"></span>
+      <button id="btn-logout" onclick="signOut()">Logout</button>
+    </div>
+  </div>
+
   <h1 style="text-align:center;">💬 Isu Globalisasi Dalam Budaya</h1>
   <p style="text-align:center;">Baca perbincangan di bawah mengikut topik, kemudian tambah pendapat anda.</p>
 
   <div class="topic" id="topic1">
     <h2>👗 Pakaian Moden: Fesyen Ke atau Dah Lupa Aurat?</h2>
-    <p>Sekarang semua nak nampak bergaya — ikut tren, artis, dan influencer. Tapi dalam kejar fesyen moden, ramai dah lupa batas aurat dan kesopanan yang Islam ajar. Kita bangga ikut gaya Barat sebab nampak <i>“trendy”</i> dan <i>“up to date”</i>, tapi dalam masa sama maruah dan identiti Islam makin hilang.</p>
+    <p>... (teks topik 1)</p>
     <div id="comments-topic1" class="comments"></div>
     <div class="comment-box">
-      <input id="name-topic1" placeholder="Nama (Wajib diisi)">
-      <textarea id="input-topic1" rows="3" placeholder="Tulis pendapat anda..."></textarea>
-      <button onclick="postComment('topic1')">Hantar</button>
+      <textarea id="input-topic1" rows="3" placeholder="Sila login untuk komen..."></textarea>
+      <button id="btn-topic1" onclick="postComment('topic1')">Hantar</button>
     </div>
   </div>
 
   <div class="topic" id="topic2">
     <h2>💍 Perkahwinan Bebas Anak: Kebebasan Atau Hilang Arah?</h2>
-    <p>Semakin ramai pasangan pilih kahwin tanpa anak. Katanya nak fokus kerjaya, nak <i>“enjoy hidup”</i>, atau takut anak jadi beban. Pemikiran ni datang dari budaya Barat yang utamakan kebebasan diri. Tapi dalam Islam, anak itu rezeki dan amanah. Bila kita tolak zuriat, kita tolak tanggungjawab yang Allah beri.</p>
+    <p>... (teks topik 2)</p>
     <div id="comments-topic2" class="comments"></div>
     <div class="comment-box">
-      <input id="name-topic2" placeholder="Nama (Wajib diisi)">
-      <textarea id="input-topic2" rows="3" placeholder="Tulis pendapat anda..."></textarea>
-      <button onclick="postComment('topic2')">Hantar</button>
+      <textarea id="input-topic2" rows="3" placeholder="Sila login untuk komen..."></textarea>
+      <button id="btn-topic2" onclick="postComment('topic2')">Hantar</button>
     </div>
   </div>
 
   <div class="topic" id="topic3">
     <h2>👫 Pergaulan Bebas: Dah Biasa Sebab Dunia Dah Terbuka?</h2>
-    <p><i>“Kawan je pun.”</i> — ayat paling biasa bila sebut pergaulan bebas. Tapi bila batas makin kabur, dosa jadi hal kecil. Budaya Barat buat semua tu nampak normal, padahal Islam dah tetapkan batas untuk jaga maruah. Dunia boleh terbuka, tapi jangan sampai prinsip Islam kita terbuka sama.</p>
+    <p>... (teks topik 3)</p>
     <div id="comments-topic3" class="comments"></div>
     <div class="comment-box">
-      <input id="name-topic3" placeholder="Nama (Wajib diisi)">
-      <textarea id="input-topic3" rows="3" placeholder="Tulis pendapat anda..."></textarea>
-      <button onclick="postComment('topic3')">Hantar</button>
+      <textarea id="input-topic3" rows="3" placeholder="Sila login untuk komen..."></textarea>
+      <button id="btn-topic3" onclick="postComment('topic3')">Hantar</button>
     </div>
   </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/12.4.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.4.0/firebase-database-compat.js"></script>
-<script>
+<script src="https://www.gstatic.com/firebasejs/12.4.0/firebase-auth-compat.js"></script> <script>
 // !!!!! GANTI DI SINI !!!!!
 // GANTIKAN SEMUA DI BAWAH DENGAN FIREBASE CONFIG AWAK YANG ASAL
 const firebaseConfig = {
   apiKey: "AIzaSy... (GANTI INI)",
   authDomain: "isu-globalisasi... (GANTI INI)",
-  databaseURL: "https://isu-globalisasi-budaya-comment-default-rtdb.asia-southeast1.firebasedatabase.app", // (GANTI INI)
+  databaseURL: "https://isu-globalisasi-budaya-comment-default-rtdb.asia-southeast1.firebasedabase.app", // (GANTI INI)
   projectId: "isu-globalisasi... (GANTI INI)",
   storageBucket: "isu-globalisasi... (GANTI INI)",
   messagingSenderId: "884609... (GANTI INI)",
@@ -156,8 +201,67 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+const auth = firebase.auth(); // Inisialisasi Auth
 
 const ALLOWED_EMOJIS = ['👍', '❤️', '😂', '😮'];
+
+let currentUser = null; // Simpan status user di sini
+
+// === FUNGSI BARU UNTUK URUS LOGIN ===
+
+// 1. Dengar perubahan status login
+auth.onAuthStateChanged(user => {
+  const loginButton = document.getElementById('btn-google-login');
+  const userInfoDiv = document.getElementById('user-info');
+  const allTextAreas = document.querySelectorAll('textarea');
+  const allButtons = document.querySelectorAll('.comment-box button');
+
+  if (user) {
+    // User SUDAH login
+    currentUser = user;
+    loginButton.style.display = 'none';
+    userInfoDiv.style.display = 'flex';
+    document.getElementById('user-avatar').src = user.photoURL;
+    document.getElementById('user-name').textContent = user.displayName;
+    
+    // Aktifkan semua kotak komen
+    allTextAreas.forEach(ta => {
+      ta.disabled = false;
+      ta.placeholder = "Tulis pendapat anda...";
+    });
+    allButtons.forEach(btn => btn.disabled = false);
+
+  } else {
+    // User BELUM login
+    currentUser = null;
+    loginButton.style.display = 'block';
+    userInfoDiv.style.display = 'none';
+    
+    // Matikan semua kotak komen
+    allTextAreas.forEach(ta => {
+      ta.disabled = true;
+      ta.placeholder = "Sila login untuk komen...";
+    });
+    allButtons.forEach(btn => btn.disabled = true);
+  }
+  // Muat semula komen untuk tunjuk/sorok butang padam
+  ['topic1','topic2','topic3'].forEach(loadComments);
+});
+
+// 2. Fungsi untuk Login
+function signInWithGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(error => {
+    console.error("Gagal login:", error);
+  });
+}
+
+// 3. Fungsi untuk Logout
+function signOut() {
+  auth.signOut();
+}
+
+// === FUNGSI LAMA YANG DIKEMAS KINI ===
 
 function escapeHtml(unsafe){
   return unsafe.replace(/&/g,"&amp;").replace(/</g,"&lt;")
@@ -165,16 +269,26 @@ function escapeHtml(unsafe){
                .replace(/'/g,"&#039;");
 }
 
-// ===== FUNGSI DIKEMAS KINI (tambah butang Balas) =====
+// ===== DIKEMAS KINI: Tambah Avatar & Security Butang Padam/Balas =====
 function makeCommentElement(topicId, commentId, data){
   const div = document.createElement('div');
   div.className = 'single-comment';
   const date = new Date(data.time);
   const timeStr = date.toLocaleString('ms-MY',{year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
   
+  // Avatar
+  const avatar = data.photoURL || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; // Gambar placeholder
+  
+  // Butang Padam
+  let deleteBtnHtml = '';
+  // HANYA tunjuk butang 'X' jika user login DAN UID komen sama dgn UID user
+  if (currentUser && currentUser.uid === data.uid) {
+    deleteBtnHtml = `<button class="delete-btn" onclick="deleteComment('${topicId}', '${commentId}')">X</button>`;
+  }
+
+  // Bar Emoji
   let emojiBarHtml = '<div class="emoji-bar">';
   const reactions = data.reactions || {}; 
-  
   for (const emoji of ALLOWED_EMOJIS) {
     const count = reactions[emoji] || 0; 
     emojiBarHtml += `
@@ -184,51 +298,53 @@ function makeCommentElement(topicId, commentId, data){
     `;
   }
   
-  // === INI KOD BARU UNTUK "BALAS" ===
-  // Sediakan nama yang 'safe' untuk diletak dalam onclick
-  const safeName = data.name.replace(/'/g, "\\'"); // Escape single quotes
-  emojiBarHtml += `
-    <button class="reply-btn" onclick="replyTo('${topicId}', '${safeName}')">
-      Balas
-    </button>
-  `;
-  // === TAMAT KOD BARU ===
-  
+  // Butang Balas
+  // HANYA tunjuk butang 'Balas' jika user login
+  if (currentUser) {
+    const safeName = data.name.replace(/'/g, "\\'");
+    emojiBarHtml += `
+      <button class="reply-btn" onclick="replyTo('${topicId}', '${safeName}')">
+        Balas
+      </button>
+    `;
+  }
   emojiBarHtml += '</div>';
 
+  // Gabung semua HTML
   div.innerHTML = `
-    <button class="delete-btn" onclick="deleteComment('${topicId}', '${commentId}')">X</button>
+    <img src="${avatar}" alt="Avatar" class="comment-avatar">
+    ${deleteBtnHtml}
     <div class="comment-name">${escapeHtml(data.name)}</div>
-    <div>${escapeHtml(data.text)}</div>
     <div class="comment-time">${timeStr}</div>
+    <div class="comment-text">${escapeHtml(data.text)}</div>
     ${emojiBarHtml} 
   `; 
   return div;
 }
 
-// ===== FUNGSI DIKEMAS KINI (NAMA WAJIB DIISI) =====
+// ===== DIKEMAS KINI: Guna data 'currentUser' & 'uid' =====
 function postComment(topicId){
-  const nameInput = document.getElementById(`name-${topicId}`);
+  // Tak perlu check 'currentUser' sebab butang dah 'disabled' jika belum login
   const input = document.getElementById(`input-${topicId}`);
-  
-  const name = nameInput.value.trim(); // Dapatkan nama
   const text = input.value.trim();
   
-  // --- KEMAS KINI DI SINI ---
-  // Periksa jika teks atau nama kosong
   if(!text){ 
     alert('Sila tulis komen dahulu.'); 
     return; 
   }
-  if(!name){ 
-    alert('Sila masukkan nama anda untuk hantar komen.'); 
-    return; 
-  }
-  // --- TAMAT KEMAS KINI ---
   
-  db.ref('comments/'+topicId).push({name,text,time:Date.now()});
+  // Guna data dari 'currentUser'
+  const commentData = {
+    text: text,
+    time: Date.now(),
+    name: currentUser.displayName,
+    photoURL: currentUser.photoURL,
+    uid: currentUser.uid // PENTING: Simpan UID 'owner' komen
+  };
   
-  input.value=''; nameInput.value='';
+  db.ref('comments/'+topicId).push(commentData);
+  
+  input.value='';
 }
 
 function loadComments(topicId){
@@ -246,40 +362,51 @@ function loadComments(topicId){
   });
 }
 
+// ===== DIKEMAS KINI: Tambah 'check' keselamatan =====
 function deleteComment(topicId, commentId) {
   if (confirm('Anda pasti nak padam komen ini?')) {
-    db.ref(`comments/${topicId}/${commentId}`)
-      .remove()
-      .catch(err => {
-        alert('Gagal padam komen: '.concat(err.message));
-      });
+    const commentRef = db.ref(`comments/${topicId}/${commentId}`);
+    
+    // 'Check' sekali lagi di sini adalah amalan terbaik
+    // Walaupun butang 'X' dah sorok, user pandai boleh panggil fungsi ini
+    if (!currentUser) {
+        alert('Sila login.');
+        return;
+    }
+
+    commentRef.once('value', snapshot => {
+        const commentData = snapshot.val();
+        if (commentData && commentData.uid === currentUser.uid) {
+            // UID sepadan, benarkan padam
+            commentRef.remove().catch(err => {
+                alert('Gagal padam komen: ' + err.message);
+            });
+        } else {
+            // UID tak sepadan! Penceroboh!
+            alert('Anda hanya boleh padam komen anda sendiri.');
+        }
+    });
   }
 }
 
 function addReaction(topicId, commentId, emoji) {
-  const reactionRef = db.ref(`comments/${topicId}/${commentId}/reactions/${emoji}`);
+  // Tak perlu check login untuk 'react', tapi kalau nak, boleh tambah
+  // if (!currentUser) { alert('Sila login untuk react'); return; }
   
+  const reactionRef = db.ref(`comments/${topicId}/${commentId}/reactions/${emoji}`);
   reactionRef.transaction(currentValue => {
     return (currentValue || 0) + 1;
   });
 }
 
-// ===== FUNGSI BARU (UNTUK SIMULASI REPLY) =====
 function replyTo(topicId, name) {
   const input = document.getElementById(`input-${topicId}`);
-  
-  // Letak @Nama di kotak komen
   input.value = `@${name} `;
-  
-  // Terus fokus ke kotak komen
   input.focus();
 }
-// ===========================================
 
-['topic1','topic2','topic3'].forEach(loadComments);
+// Tak perlu panggil loadComments() di sini, ia akan dipanggil oleh onAuthStateChanged
 </script>
 </body>
 </html>
- 
-
-
+    
