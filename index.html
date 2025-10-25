@@ -438,39 +438,50 @@ function addReaction(topicId, commentId, emoji) {
 
 // === 3. FUNGSI 'RENDER' REKURSIF (Paling Kompleks) ===
 
+// === 3. FUNGSI 'RENDER' REKURSIF (VERSI DIBETULKAN) ===
+
+/**
+ * Pintu masuk utama. Muat SEMUA komen untuk topik ini.
+ */
 function loadComments(topicId){
   const container = document.getElementById('comments-'+topicId);
-  
-  // Kita 'order by' parentId supaya boleh proses 'root' dulu
+
+  // Kita 'order by' time. 'parentId' akan diurus oleh logik
   db.ref('comments/'+topicId).orderByChild('time').on('value', snapshot => {
     container.innerHTML = ''; // Kosongkan
     const allComments = snapshot.val() || {};
-    
+
     // 1. Bina 'map' untuk susun komen
     const commentsById = new Map();
     const repliesMap = new Map();
-    
+
     for (const [id, comment] of Object.entries(allComments)) {
       comment.id = id; // Simpan ID unik
       commentsById.set(id, comment);
-      
-      const parentId = comment.parentId || 'root';
-      if (!repliesMap.has(parentId)) {
-        repliesMap.set(parentId, []);
+
+      // === INI ADALAH PEMBETULAN (FIX) ===
+      const parentId = comment.parentId; // Dapatkan parentId
+
+      if (parentId) { // HANYA proses komen jika ia ADA 'parentId'
+        if (!repliesMap.has(parentId)) {
+          repliesMap.set(parentId, []);
+        }
+        repliesMap.get(parentId).push(comment);
       }
-      repliesMap.get(parentId).push(comment);
+      // Jika 'parentId' tak wujud (cth: komen lama), ia akan diabaikan
+      // ===================================
     }
 
     // 2. 'Render' hanya komen 'root' (level 0)
     // Kita susun 'root' secara menurun (terbaru di atas)
     const rootComments = (repliesMap.get('root') || []).reverse();
-    
+
     if (rootComments.length === 0) {
         container.innerHTML = '<p style="text-align:center; color:#777; font-size:14px;">Tiada komen lagi. Jadilah yang pertama!</p>';
     } else {
         const threadContainer = document.createElement('div');
         threadContainer.className = 'comment-thread';
-        
+
         for (const comment of rootComments) {
           threadContainer.appendChild(
             renderCommentRecursive(topicId, comment, repliesMap, commentsById)
@@ -573,4 +584,5 @@ function renderCommentRecursive(topicId, comment, repliesMap, commentsById) {
 </script>
 </body>
 </html>
+
 
