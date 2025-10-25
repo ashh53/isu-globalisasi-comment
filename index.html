@@ -351,28 +351,75 @@ function toggleReplyBox(commentId, forceShow = null) {
 }
 
 /**
- * Fungsi 'delete' baru. Ia tak padam, tapi 'tanda' sebagai dipadam.
+ * /**
+ * Fungsi 'delete' baru. Ia akan PADAM komen (dan semua balasannya)
  */
 function deleteComment(topicId, commentId) {
-  if (!confirm('Anda pasti nak padam komen ini? Komen balasan akan dikekalkan.')) return;
+  if (!confirm('Anda pasti nak padam komen ini? SEMUA balasan di bawahnya akan turut dipadam.')) return;
   if (!currentUser) { alert('Sila login.'); return; }
 
   const commentRef = db.ref(`comments/${topicId}/${commentId}`);
-  
+
+  // Semak kebenaran (permission) dulu
   commentRef.once('value', snapshot => {
     const data = snapshot.val();
-    if (data && data.uid === currentUser.uid) {
-      // Jangan padam. 'Update' sahaja.
-      commentRef.update({
-        text: "[ komen dipadam ]",
-        name: "[ pengguna dipadam ]",
-        photoURL: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
-        isDeleted: true
-      });
+    if (!data) {
+        console.log("Komen dah tak wujud.");
+        return;
+    }
+
+    if (data.uid === currentUser.uid) {
+        // Pengguna sah.
+        // Pertama, cari semua 'anak' (balasan) dan padamkannya.
+        // Ini adalah operasi rekursif (panggil diri sendiri)
+        deleteAllReplies(topicId, commentId, () => {
+            // Selepas semua 'anak' dipadam, baru padam 'ibu'
+            commentRef.remove()
+                .catch(err => alert('Gagal padam komen utama: ' + err.message));
+        });
+
     } else {
       alert('Anda hanya boleh padam komen anda sendiri.');
     }
   });
+}
+
+/**
+ * Fungsi bantuan (helper) untuk padam semua balasan (rekursif)
+ */
+function deleteAllReplies(topicId, parentId, onComplete) {
+    const repliesRef = db.ref('comments/' + topicId).orderByChild('parentId').equalTo(parentId);
+
+    repliesRef.once('value', snapshot => {
+        const replies = snapshot.val();
+        if (!replies) {
+            // Tiada balasan, 'callback' tamat
+            onComplete();
+            return;
+        }
+
+        const replyIds = Object.keys(replies);
+        let processedCount = 0;
+
+        if (replyIds.length === 0) {
+            onComplete();
+            return;
+        }
+
+        // Padam setiap balasan, dan balasan kepada balasan itu
+        replyIds.forEach(replyId => {
+            deleteAllReplies(topicId, replyId, () => {
+                // Selepas 'cucu' dipadam, padam 'anak'
+                db.ref(`comments/${topicId}/${replyId}`).remove(() => {
+                    processedCount++;
+                    if (processedCount === replyIds.length) {
+                        // Semua balasan di level ini dah padam
+                        onComplete();
+                    }
+                });
+            });
+        });
+    });
 }
 
 /**
@@ -526,3 +573,4 @@ function renderCommentRecursive(topicId, comment, repliesMap, commentsById) {
 </script>
 </body>
 </html>
+
