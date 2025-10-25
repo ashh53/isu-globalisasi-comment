@@ -376,7 +376,7 @@ function addReaction(topicId, commentId, emoji) {
   });
 }
 
-// === FIX 2: FUNGSI 'LOAD' (SEMBUNYI KOMEN LAMA) ===
+// === FIX 2.1: FUNGSI 'LOAD' (SEMBUNYI KOMEN LAMA DAN KOMEN 'isDeleted') ===
 function loadComments(topicId){
   const container = document.getElementById('comments-'+topicId);
   
@@ -388,17 +388,24 @@ function loadComments(topicId){
     const repliesMap = new Map();
     
     for (const [id, comment] of Object.entries(allComments)) {
+      
+      // === INI ADALAH PEMBETULAN (FIX) ===
+      // 1. Abaikan jika komen 'isDeleted'
+      // 2. Abaikan jika komen TIADA 'parentId' (ini komen sistem lama)
+      if (comment.isDeleted || !comment.parentId) {
+        continue; // Skip komen ini
+      }
+      // ===================================
+
       comment.id = id; 
       commentsById.set(id, comment);
       
       const parentId = comment.parentId; 
       
-      if (parentId) { // HANYA proses komen jika ia ADA 'parentId'
-        if (!repliesMap.has(parentId)) {
-          repliesMap.set(parentId, []);
-        }
-        repliesMap.get(parentId).push(comment);
+      if (!repliesMap.has(parentId)) {
+        repliesMap.set(parentId, []);
       }
+      repliesMap.get(parentId).push(comment);
     }
 
     const rootComments = (repliesMap.get('root') || []).reverse();
@@ -418,7 +425,7 @@ function loadComments(topicId){
     }
   });
 }
-
+// === TAMAT FIX 2.1 ===
 function renderCommentRecursive(topicId, comment, repliesMap, commentsById) {
   const wrapper = document.createElement('div');
   wrapper.className = 'comment-wrapper';
@@ -500,3 +507,4 @@ function renderCommentRecursive(topicId, comment, repliesMap, commentsById) {
 </script>
 </body>
 </html>
+
